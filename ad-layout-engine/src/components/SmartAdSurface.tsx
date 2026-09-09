@@ -9,6 +9,7 @@ interface SmartAdSurfaceProps {
 
 function SmartAdSurface({ ad, surfaceWidth, surfaceHeight }: SmartAdSurfaceProps) {
   const layout = generateLayout(ad, surfaceWidth, surfaceHeight)
+  console.log(`Layout for ${surfaceWidth}x${surfaceHeight}:`, layout.strategyName, layout.placements)
 
   return (
     <div>
@@ -56,10 +57,11 @@ function ElementVisual({ type, content }: { type: string; content: string }) {
     case 'headline':
         return <h2 style={{ margin: 0, fontSize: 18, textAlign: 'center', color: '#1a1a1a', lineHeight: 1.35 }}>{content}</h2>
     case 'subtext':
-         return <p style={{ margin: 0, fontSize: 12, color: '#555', textAlign: 'center', lineHeight: 1.35 }}>{content}</p>
-      return (
+        return <p style={{ margin: 0, fontSize: 12, color: '#555', textAlign: 'center', lineHeight: 1.35 }}>{content}</p>
+    case 'cta':
+        return (
         <button
-          style={{
+            style={{
             width: '100%',
             height: '100%',
             background: '#1a73e8',
@@ -67,11 +69,11 @@ function ElementVisual({ type, content }: { type: string; content: string }) {
             border: 'none',
             borderRadius: 4,
             fontSize: 12,
-          }}
-        >
-          {content}
-        </button>
-      )
+      }}
+    >
+      {content}
+    </button>
+  )
     case 'image':
       return (
         <div style={{ width: '100%', height: '100%', background: '#ddd', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: '#888' }}>

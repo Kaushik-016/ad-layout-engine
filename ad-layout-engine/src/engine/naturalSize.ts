@@ -1,10 +1,10 @@
 import type { AdElement } from '../types/ad'
 
-function estimateTextHeight(text: string, width: number, fontSize: number, lineHeight = 1.3): number {
-  const avgCharWidth = fontSize * 0.55
+function estimateTextHeight(text: string, width: number, fontSize: number, lineHeight = 1.35): number {
+  const avgCharWidth = fontSize * 0.58
   const charsPerLine = Math.max(1, Math.floor(width / avgCharWidth))
   const lines = Math.max(1, Math.ceil(text.length / charsPerLine))
-  return lines * fontSize * lineHeight
+  return lines * fontSize * lineHeight + 4 // small safety buffer
 }
 
 export function getNaturalSize(element: AdElement, availableWidth?: number): { width: number; height: number } {
