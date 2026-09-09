@@ -50,7 +50,7 @@ function AdSurface({ ad, surfaceWidth, surfaceHeight }: AdSurfaceProps) {
 function ElementBlock({ element }: { element: AdElement }) {
   switch (element.type) {
     case 'headline':
-      return <h2 style={{ margin: 0, fontSize: 24 }}>{element.content}</h2>
+      return <h2 style={{ margin: 0, fontSize: 24, color: '#1a1a1a', lineHeight: 1.35 }}>{element.content}</h2>
     case 'subtext':
       return <p style={{ margin: 0, fontSize: 14, color: '#555' }}>{element.content}</p>
     case 'cta':
