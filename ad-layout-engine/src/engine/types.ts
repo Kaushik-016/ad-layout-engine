@@ -7,6 +7,7 @@ export interface PlacedElement {
   width: number
   height: number
   hidden: boolean
+  fontScale: number
 }
 
 export interface LayoutCandidate {

@@ -4,11 +4,12 @@ import { getNaturalSize } from './naturalSize'
 
 const PADDING = 12
 const GAP = 8
+const MIN_TEXT_SCALE = 0.65
 
 type Direction = 'vertical' | 'horizontal'
 
-// only images/logos are allowed to shrink — text must stay at natural size to remain readable
 const isFlexible = (el: AdElement) => el.type === 'image' || el.type === 'logo'
+const isTextFlexible = (el: AdElement) => el.type === 'headline' || el.type === 'cta'
 
 export function stackElements(
   elements: AdElement[],
@@ -20,15 +21,16 @@ export function stackElements(
 
   const mainAxisLimit = direction === 'vertical' ? surfaceHeight : surfaceWidth
   const crossAxisLimit = direction === 'vertical' ? surfaceWidth : surfaceHeight
-
   const availableCrossWidth = direction === 'vertical' ? crossAxisLimit - PADDING * 2 : undefined
 
   const sizes = new Map(
-  working.map((el) => {
-    const n = getNaturalSize(el, availableCrossWidth)
-    return [el.id, { width: n.width, height: n.height }]
-  })
-)
+    working.map((el) => {
+      const n = getNaturalSize(el, availableCrossWidth)
+      return [el.id, { width: n.width, height: n.height }]
+    })
+  )
+  const naturalWidths = new Map(working.map((el) => [el.id, sizes.get(el.id)!.width]))
+  const scales = new Map(working.map((el) => [el.id, 1]))
 
   const mainSize = (el: AdElement) => {
     const s = sizes.get(el.id)!
@@ -41,7 +43,7 @@ export function stackElements(
   const hidden: AdElement[] = []
 
   while (totalMain() > mainAxisLimit) {
-    // step 1: try shrinking flexible (image/logo) elements down to their minimum constraint
+    // tier 1: shrink flexible visuals (image/logo) down to their minimum
     const shrinkable = working.filter((el) => {
       if (!isFlexible(el)) return false
       const minMain = direction === 'vertical' ? el.constraints.minHeight : el.constraints.minWidth
@@ -67,12 +69,38 @@ export function stackElements(
       continue
     }
 
-    // step 2: nothing left to shrink — drop the lowest-priority hideable element
+    // tier 2: drop the lowest-priority hideable element
     const droppable = working.filter((el) => el.constraints.canHide).sort((a, b) => b.priority - a.priority)
-    if (droppable.length === 0) break
-    const toDrop = droppable[0]
-    working = working.filter((el) => el.id !== toDrop.id)
-    hidden.push(toDrop)
+    if (droppable.length > 0) {
+      const toDrop = droppable[0]
+      working = working.filter((el) => el.id !== toDrop.id)
+      hidden.push(toDrop)
+      continue
+    }
+
+    // tier 3: last resort — compress headline/cta text down to a legible floor
+    const textShrinkable = working.filter((el) => {
+      if (!isTextFlexible(el)) return false
+      const natural = naturalWidths.get(el.id)!
+      return sizes.get(el.id)!.width > natural * MIN_TEXT_SCALE
+    })
+
+    if (textShrinkable.length > 0) {
+      const excess = totalMain() - mainAxisLimit
+      const shrinkPerElement = excess / textShrinkable.length
+      for (const el of textShrinkable) {
+        const s = sizes.get(el.id)!
+        const natural = naturalWidths.get(el.id)!
+        const floor = natural * MIN_TEXT_SCALE
+        const newWidth = Math.max(floor, s.width - shrinkPerElement)
+        sizes.set(el.id, { width: newWidth, height: s.height })
+        scales.set(el.id, newWidth / natural)
+      }
+      continue
+    }
+
+    // truly nothing left to do — accept overflow, scoring will penalize it
+    break
   }
 
   const placements: PlacedElement[] = []
@@ -92,12 +120,12 @@ export function stackElements(
     const x = direction === 'vertical' ? (surfaceWidth - width) / 2 : cursor
     const y = direction === 'vertical' ? cursor : (surfaceHeight - height) / 2
 
-    placements.push({ element: el, x, y, width, height, hidden: false })
+    placements.push({ element: el, x, y, width, height, hidden: false, fontScale: scales.get(el.id) ?? 1 })
     cursor += (direction === 'vertical' ? height : width) + GAP
   }
 
   for (const el of hidden) {
-    placements.push({ element: el, x: 0, y: 0, width: 0, height: 0, hidden: true })
+    placements.push({ element: el, x: 0, y: 0, width: 0, height: 0, hidden: true, fontScale: 1 })
   }
 
   return placements
