@@ -1,5 +1,7 @@
 import type { Ad } from '../types/ad'
 import { generateLayout } from '../engine/generateLayout'
+import { computeNaiveLayout } from '../engine/naiveLayout'
+import { scoreLayout } from '../engine/scoreLayout'
 
 interface SmartAdSurfaceProps {
   ad: Ad
@@ -9,6 +11,11 @@ interface SmartAdSurfaceProps {
 
 function SmartAdSurface({ ad, surfaceWidth, surfaceHeight }: SmartAdSurfaceProps) {
   const layout = generateLayout(ad, surfaceWidth, surfaceHeight)
+
+  const naivePlacements = computeNaiveLayout(ad, surfaceWidth, surfaceHeight)
+  const naiveScore = scoreLayout({ placements: naivePlacements, surfaceWidth, surfaceHeight })
+  const improvement = layout.score - naiveScore
+
   return (
     <div>
       <div
@@ -43,9 +50,18 @@ function SmartAdSurface({ ad, surfaceWidth, surfaceHeight }: SmartAdSurfaceProps
             </div>
           ))}
       </div>
-      <p style={{ fontSize: 12, color: '#888', marginTop: 4 }}>
-        strategy: {layout.strategyName} · score: {layout.score.toFixed(1)}
-      </p>
+
+      <div style={{ marginTop: 8, fontSize: 12 }}>
+        <div style={{ color: '#888', marginBottom: 4 }}>strategy: {layout.strategyName}</div>
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+          <span style={{ color: '#1a73e8', fontWeight: 600 }}>Smart: {layout.score.toFixed(1)}</span>
+          <span style={{ color: '#999' }}>Naive: {naiveScore.toFixed(1)}</span>
+          <span style={{ color: improvement >= 0 ? '#188038' : '#c5221f', fontWeight: 600 }}>
+            {improvement >= 0 ? '+' : ''}
+            {improvement.toFixed(1)} pts
+          </span>
+        </div>
+      </div>
     </div>
   )
 }
