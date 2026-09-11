@@ -4,15 +4,29 @@ function estimateTextHeight(text: string, width: number, fontSize: number, lineH
   const avgCharWidth = fontSize * 0.58
   const charsPerLine = Math.max(1, Math.floor(width / avgCharWidth))
   const lines = Math.max(1, Math.ceil(text.length / charsPerLine))
-  return lines * fontSize * lineHeight + 4 // small safety buffer
+  return lines * fontSize * lineHeight + 4
+}
+
+function estimateSingleLineSize(text: string, fontSize: number, lineHeight = 1.35) {
+  const avgCharWidth = fontSize * 0.58
+  return {
+    width: Math.ceil(text.length * avgCharWidth) + 8,
+    height: fontSize * lineHeight + 4,
+  }
 }
 
 export function getNaturalSize(element: AdElement, availableWidth?: number): { width: number; height: number } {
   switch (element.type) {
     case 'headline': {
-      const width = Math.min(220, availableWidth ?? 220)
-      const height = estimateTextHeight(element.content, width, 20)
-      return { width, height }
+      if (availableWidth !== undefined) {
+        // vertical stack: text is allowed to wrap within the given width
+        const width = Math.min(220, availableWidth)
+        const height = estimateTextHeight(element.content, width, 18)
+        return { width, height }
+      }
+      // horizontal row: headline must stay single-line; tier-3 shrinking handles fitting
+      const single = estimateSingleLineSize(element.content, 18)
+      return { width: Math.min(single.width, 220), height: single.height }
     }
     case 'subtext': {
       const width = Math.min(200, availableWidth ?? 200)

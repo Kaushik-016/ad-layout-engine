@@ -103,8 +103,15 @@ export function stackElements(
     break
   }
 
+  // center the stacked content along the main axis if there's leftover space
+  const contentMainSize =
+    working.reduce((sum, el) => sum + mainSize(el), 0) + GAP * Math.max(0, working.length - 1)
+  const usedMain = contentMainSize + PADDING * 2
+  const extraSpace = Math.max(0, mainAxisLimit - usedMain)
+  const startOffset = PADDING + extraSpace / 2
+
   const placements: PlacedElement[] = []
-  let cursor = PADDING
+  let cursor = startOffset
 
   for (const el of working) {
     const s = sizes.get(el.id)!
