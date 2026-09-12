@@ -41,6 +41,20 @@ The system generates multiple layout candidates, scores them, rejects invalid ar
 
 ---
 
+## 🚀 Live Demo
+
+**[Try the Adaptive Layout Engine](https://ad-layout-engine-omega.vercel.app/)**
+
+The application is deployed on Vercel and can be used directly in the browser.
+
+- Create an ad from custom headline, subtext, and CTA content
+- Select predefined advertising surfaces
+- Test custom dimensions
+- Generate adaptive layouts automatically
+- Compare how the same creative behaves across different aspect ratios
+
+---
+
 ## ✨ Core Idea
 
 The engine represents an advertisement as **semantic elements** rather than treating it as one indivisible image.
