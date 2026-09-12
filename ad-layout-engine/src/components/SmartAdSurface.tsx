@@ -7,6 +7,7 @@ import { computeNaiveLayout } from '../engine/naiveLayout'
 import { scoreLayout } from '../engine/scoreLayout'
 import AdSurface from './AdSurface'
 import { RealArtwork } from './RealArtwork'
+import { measureTextWidth, wrapTextToLines } from '../engine/textMeasure'
 
 interface SmartAdSurfaceProps {
   ad: Ad
@@ -272,57 +273,28 @@ function fitFontSize(
     minFont: number
     lineHeight: number
     allowWrap: boolean
+    fontWeight: number
   },
 ): number {
-  const CHAR_WIDTH_RATIO = 0.58
-
   for (
     let fontSize = options.maxFont;
     fontSize >= options.minFont;
     fontSize -= 1
   ) {
-    const avgCharWidth =
-      fontSize * CHAR_WIDTH_RATIO
+    const requiredHeight = options.allowWrap
+      ? wrapTextToLines(text, boxWidth, fontSize, options.fontWeight).length *
+        fontSize *
+        options.lineHeight
+      : fontSize * options.lineHeight
 
-    const charsPerLine =
-      options.allowWrap
-        ? Math.max(
-            1,
-            Math.floor(
-              boxWidth / avgCharWidth,
-            ),
-          )
-        : text.length || 1
+    const requiredWidth = options.allowWrap
+      ? 0 // wrapping already accounts for width; height is the binding constraint
+      : measureTextWidth(text, fontSize, options.fontWeight)
 
-    const lines = options.allowWrap
-      ? Math.max(
-          1,
-          Math.ceil(
-            text.length / charsPerLine,
-          ),
-        )
-      : 1
+    const fitsHeight = requiredHeight <= boxHeight
+    const fitsWidth = options.allowWrap || requiredWidth <= boxWidth
 
-    const requiredHeight =
-      lines *
-      fontSize *
-      options.lineHeight
-
-    const requiredWidth =
-      options.allowWrap
-        ? Math.min(
-            text.length,
-            charsPerLine,
-          ) * avgCharWidth
-        : text.length * avgCharWidth
-
-    if (
-      requiredHeight <= boxHeight &&
-      (options.allowWrap ||
-        requiredWidth <= boxWidth)
-    ) {
-      return fontSize
-    }
+    if (fitsHeight && fitsWidth) return fontSize
   }
 
   return options.minFont
@@ -379,6 +351,7 @@ function PlacedVisual({
             minFont: tiny ? 8 : 11,
             lineHeight: 1.05,
             allowWrap,
+            fontWeight: 800,
           },
         ) *
         Math.max(fontScale, 0.62)
@@ -392,6 +365,7 @@ function PlacedVisual({
               minFont: 9,
               lineHeight: 1.2,
               allowWrap: true,
+              fontWeight: 400,
             },
           )
         : Math.max(
