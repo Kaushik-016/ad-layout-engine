@@ -1,4 +1,5 @@
 import type { Ad, AdElement } from '../types/ad'
+import { RealArtwork } from './RealArtwork'
 
 interface AdSurfaceProps {
   ad: Ad
@@ -9,9 +10,15 @@ interface AdSurfaceProps {
 const BASE_WIDTH = 400
 const BASE_HEIGHT = 400
 
-function AdSurface({ ad, surfaceWidth, surfaceHeight }: AdSurfaceProps) {
-  // uniform scale factor so nothing gets distorted, just shrunk/enlarged
-  const scale = Math.min(surfaceWidth / BASE_WIDTH, surfaceHeight / BASE_HEIGHT)
+function AdSurface({
+  ad,
+  surfaceWidth,
+  surfaceHeight,
+}: AdSurfaceProps) {
+  const scale = Math.min(
+    surfaceWidth / BASE_WIDTH,
+    surfaceHeight / BASE_HEIGHT,
+  )
 
   return (
     <div
@@ -30,78 +37,104 @@ function AdSurface({ ad, surfaceWidth, surfaceHeight }: AdSurfaceProps) {
           height: BASE_HEIGHT,
           transform: `scale(${scale})`,
           transformOrigin: 'top left',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 12,
-          padding: 16,
-          boxSizing: 'border-box',
+          position: 'relative',
+          overflow: 'hidden',
+          background: '#ddd',
         }}
       >
-        {ad.elements.map((el) => (
-          <ElementBlock key={el.id} element={el} />
-        ))}
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+          }}
+        >
+          <RealArtwork adId={ad.id} />
+        </div>
+
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background:
+              'linear-gradient(180deg, rgba(0,0,0,.02), rgba(0,0,0,.56))',
+          }}
+        />
+
+        <div
+          style={{
+            position: 'absolute',
+            left: 28,
+            right: 28,
+            bottom: 28,
+            zIndex: 2,
+            color: '#fff',
+          }}
+        >
+          {ad.elements.map((el) => (
+            <ElementBlock
+              key={el.id}
+              element={el}
+            />
+          ))}
+        </div>
       </div>
     </div>
   )
 }
 
-function ElementBlock({ element }: { element: AdElement }) {
+function ElementBlock({
+  element,
+}: {
+  element: AdElement
+}) {
   switch (element.type) {
     case 'headline':
-      return <h2 style={{ margin: 0, fontSize: 24, color: '#1a1a1a', lineHeight: 1.35 }}>{element.content}</h2>
-    case 'subtext':
-      return <p style={{ margin: 0, fontSize: 14, color: '#555' }}>{element.content}</p>
-    case 'cta':
       return (
-        <button
+        <h2
           style={{
-            padding: '8px 16px',
-            background: '#1a73e8',
-            color: 'white',
-            border: 'none',
-            borderRadius: 4,
+            margin: '0 0 8px',
+            fontSize: 24,
+            color: '#fff',
+            lineHeight: 1.05,
+            letterSpacing: '-0.04em',
           }}
         >
           {element.content}
-        </button>
+        </h2>
       )
-    case 'image':
+
+    case 'subtext':
       return (
-        <div
+        <p
           style={{
-            width: 120,
-            height: 120,
-            background: '#ddd',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 12,
-            color: '#888',
+            margin: '0 0 14px',
+            fontSize: 14,
+            color: '#fff',
           }}
         >
-          image
-        </div>
+          {element.content}
+        </p>
       )
-    case 'logo':
+
+    case 'cta':
       return (
-        <div
+        <span
           style={{
-            width: 40,
-            height: 40,
-            background: '#ccc',
-            borderRadius: '50%',
-            display: 'flex',
+            display: 'inline-flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: 10,
-            color: '#888',
+            padding: '8px 16px',
+            background: '#fff',
+            color: '#171717',
+            borderRadius: 999,
+            fontWeight: 700,
+            fontSize: 13,
           }}
         >
-          logo
-        </div>
+          {element.content}
+        </span>
       )
+
     default:
       return null
   }
